@@ -32,31 +32,41 @@
 #include <event2/http.h>
 #include <event2/event.h>
 
-#include "dnl.h"
-#include "logger.h"
-
-#include <unistd.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <signal.h>
 
-Dnl * d;
+#ifndef WIN32
+#include <unistd.h>
+#endif
+
+#include "dnl.h"
+#include "logger.h"
+
+static Dnl * d;
 
 typedef void  (*sig_handler_t) (int);
 
+#ifdef WIN32
+void set_signal(int signo, sig_handler_t hndl)
+{
+	signal(signo, hndl);
+}
+#else
 void set_signal(int signo, sig_handler_t hndl)
 {
 	struct sigaction sa;
 	sa.sa_handler = hndl;
 	sigemptyset(&sa.sa_mask);
 	sigaddset(&sa.sa_mask, signo);
-  sa.sa_flags = 0;
+	sa.sa_flags = 0;
 
 	if (sigaction(signo, &sa, NULL) < 0) {
 		fprintf(stderr, "cannot set %d signal! %s\n", signo, strerror(errno));
 		exit(-1);
 	}
 }
+#endif
 
 void stop(int signo)
 {

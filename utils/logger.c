@@ -31,10 +31,14 @@
 #include <time.h>
 #include <stdarg.h>
 #include <string.h>
-#include <pthread.h>
 #include <stdlib.h>
 
 #include "logger.h"
+
+#ifdef WIN32
+#define flockfile _lock_file
+#define funlockfile _unlock_file
+#endif
 
 static const char * fn         = 0;
 static const char * timeformat = "%d.%m.%Y-%H:%M:%S";
