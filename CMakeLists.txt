@@ -9,6 +9,14 @@ endif()
 
 find_package(Boost COMPONENTS regex filesystem REQUIRED)
 find_package(Event2 REQUIRED)
+find_package(Berkeley REQUIRED)
+
+if (NOT WIN32)
+	add_definitions(-std=c++0x)
+endif ()
+
+include_directories(utils ${Berkeley_INCLUDE_PATH} ${Boost_INCLUDE_DIRS} ${Event2_INCLUDE_PATH})
+link_directories(${Boost_LIBRARY_DIRS})
 
 set(source 
 	dnl.cpp dnl.h 
@@ -20,10 +28,8 @@ set(source
 	)
 
 add_library(dnl ${source})
-include_directories(utils /usr/include/db4 ${Boost_INCLUDE_DIRS} ${Event2_INCLUDE_PATH})
-add_definitions(-std=c++0x)
 add_executable(spider main.cpp)
-target_link_libraries(spider dnl db_cxx event ${Boost_LIBRARIES})
+target_link_libraries(spider dnl ${Berkeley_LIBRARY} ${Event2_LIBRARY} ${Boost_LIBRARIES})
 add_executable(test_links_extractor test_links_extractor.cpp)
-target_link_libraries(test_links_extractor dnl db_cxx ${Event2_LIBRARY} ${Boost_LIBRARIES})
+target_link_libraries(test_links_extractor dnl ${Berkeley_LIBRARY} ${Event2_LIBRARY} ${Boost_LIBRARIES})
 

@@ -46,6 +46,12 @@
 #include "utils/logger.h"
 #include "dnl.h"
 
+#ifdef WIN32
+#include <io.h>
+#define snprintf _snprintf
+#define access _access
+#endif
+
 Download::Download(): uri(0)
 {
 }
@@ -573,7 +579,6 @@ Urls::~Urls()
 
 uint64_t Urls::id(const std::string & url)
 {
-	size_t size;
 	uint64_t ret = 0;
 	if (url2id_->get(0, url, ret) == 0) {
 		return ret;

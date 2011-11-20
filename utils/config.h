@@ -29,6 +29,10 @@
 #include <map>
 #include <string>
 
+#ifdef OPTIONAL
+#undef OPTIONAL
+#endif
+
 struct ConfigSkeleton
 {
 	enum Flags

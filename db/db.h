@@ -153,12 +153,12 @@ public:
 
 	template < typename T >
 	int put(Tx * tx, T t, const std::string & value) {
-		put(tx, &t, sizeof(t), value);
+		return put(tx, &t, sizeof(t), value);
 	}
 
 	template < typename T >
 	int get(Tx * tx, T t, std::string & value) {
-		get(tx, &t, sizeof(t), value);
+		return get(tx, &t, sizeof(t), value);
 	}
 
 	int get(Tx * tx, void * key, size_t klen, std::string & value) {

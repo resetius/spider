@@ -181,7 +181,6 @@ public:
 	virtual ~BIterator() { if (cursor) cursor->close(); }
 
 	bool next(std::string & key, KV::Db::value_type & p, size_t & size) {
-		uint32_t fake;
 		Dbt k;
 		Dbt v;
 		v.set_flags(DB_DBT_MALLOC);

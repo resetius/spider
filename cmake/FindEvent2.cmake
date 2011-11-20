@@ -7,8 +7,6 @@ if (NOT Event2_INCLUDE_PATH)
 find_path (Event2_INCLUDE_PATH event2/http.h PATHS ENV INCLUDE)
 endif ()
 
-
-
 if (Event2_LIBRARY_DIR)
 find_library(Event2_LIBRARY1 NAMES event libevent PATHS ${Event2_LIBRARY_DIR})
 else ()
@@ -19,6 +17,7 @@ if (NOT WIN32)
 find_library(Event2_LIBRARY2 PATH_SUFFIXES event2 NAMES event_pthreads event_pthreads-2.0)
 else ()
 set(Event2_LIBRARY2 "fake")
+set(Event2_INCLUDE_PATH ${Event2_INCLUDE_PATH};${Event2_INCLUDE_PATH}/../WIN32-Code/)
 endif ()
 
 # for clock_gettime
