@@ -111,7 +111,7 @@ int main(int argc, char ** argv)
 		if (!f) {
 			fprintf(stderr, "cannot open %s\n", argv[1]);
 		}
-		while (fgets(buf, sizeof(buf), f)) {
+		while (f && fgets(buf, sizeof(buf), f)) {
 			if (!strlen(buf)) {
 				continue;
 			}
@@ -124,7 +124,7 @@ int main(int argc, char ** argv)
 			fprintf(stdout, "adding '%s'\n", buf);
 			dnl.add(buf);
 		}
-		fclose(f);
+		if (f) fclose(f);
 		dnl.run();
 	} else {
 		fprintf(stderr, "usage: %s urls.txt\n", argv[0]);

@@ -245,11 +245,16 @@ void Dnl::process(struct evhttp_request * req, Download * d)
 	if (code == 200) {
 		size_t size = evbuffer_get_length(req->input_buffer);
 		std::string content;
-		content.resize(size);
-		evbuffer_remove(req->input_buffer, &content[0], size);
+		if (size) {
+			content.resize(size);
+			evbuffer_remove(req->input_buffer, &content[0], size);
+		}
 		downloaded_->done(d->id);
 		downloading_ids_.erase(d->id);
-		extract_links(req, content, d);
+
+		if (!content.empty()) {
+			extract_links(req, content, d);
+		}
 
 		bytes_ += size;
 		urls_downloaded_  += 1;
@@ -350,7 +355,11 @@ bool Dnl::check_dnl_url(const std::string & url, uint64_t id)
 		return false;
 	}
 	std::string full = path + file;
-	if (access(full.c_str(), 0644) == 0) {
+	int mode = 0644;
+#if WIN32
+	mode = 00;
+#endif
+	if (access(full.c_str(), mode) == 0) {
 		// already exists
 		mylog(LOG_NOTICE, "file '%s'exists", full.c_str());
 		return false;
