@@ -40,6 +40,11 @@
 #include <unistd.h>
 #endif
 
+#ifdef WIN32
+#include <windows.h>
+#include <winsock2.h>
+#endif
+
 #include "dnl.h"
 #include "logger.h"
 
@@ -75,35 +80,61 @@ void stop(int signo)
 
 int main(int argc, char ** argv)
 {
+	mylog_init(6, "spider.log");
+
+#ifdef WIN32
+	WORD wVersionRequested;
+	WSADATA wsaData;
+	int err;
+
+	/* Use the MAKEWORD(lowbyte, highbyte) macro declared in Windef.h */
+	wVersionRequested = MAKEWORD(2, 2);
+
+	err = WSAStartup(wVersionRequested, &wsaData);
+	if (err != 0) {
+		/* Tell the user that we could not find a usable */
+		/* Winsock DLL.                                  */
+		fprintf(stderr, "WSAStartup failed with error: %d\n", err);
+		return 1;
+	}
+#endif
+
 	Dnl dnl;
 	char buf[32768];
 	d = &dnl;
-	mylog_init(6, "spider.log");
-
-	FILE * f = fopen(argv[1], "rb");
-	if (!f) {
-		fprintf(stderr, "cannot open %s\n", argv[1]);
-	}
-	while (fgets(buf, sizeof(buf), f)) {
-		if (!strlen(buf)) {
-			continue;
-		}
-		if (buf[strlen(buf) - 1] == '\n') {
-			buf[strlen(buf) - 1] = 0;
-		}
-		if (buf[strlen(buf) - 1] == '\r') {
-			buf[strlen(buf) - 1] = 0;
-		}
-		fprintf(stdout, "adding '%s'\n", buf);
-		dnl.add(buf);
-	}
-	fclose(f);
 
 	set_signal(2, stop);
 	set_signal(15, stop);
 
-	dnl.run();
+	if (argc > 1) {
+		FILE * f = fopen(argv[1], "rb");
+		if (!f) {
+			fprintf(stderr, "cannot open %s\n", argv[1]);
+		}
+		while (fgets(buf, sizeof(buf), f)) {
+			if (!strlen(buf)) {
+				continue;
+			}
+			if (buf[strlen(buf) - 1] == '\n') {
+				buf[strlen(buf) - 1] = 0;
+			}
+			if (buf[strlen(buf) - 1] == '\r') {
+				buf[strlen(buf) - 1] = 0;
+			}
+			fprintf(stdout, "adding '%s'\n", buf);
+			dnl.add(buf);
+		}
+		fclose(f);
+		dnl.run();
+	} else {
+		fprintf(stderr, "usage: %s urls.txt\n", argv[0]);
+	}
+
 	mylog_close();
+
+#ifdef WIN32
+	 WSACleanup();
+#endif
 
 	return 0;
 }

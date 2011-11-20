@@ -198,7 +198,7 @@ public:
 	};
 
 	BDb(BEnv & env, const std::string & name, DbType type): 
-		KV::Db(env, name), ::Db(env_.get(), 0), env_(env), type_((int)type) 
+		KV::Db(env, name), ::Db(env.get(), 0), env_(env), type_((int)type) 
 	{
 	}
 

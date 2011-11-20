@@ -63,15 +63,25 @@ Download::~Download()
 	}
 }
 
+static void libevent_log(int level, const char * msg)
+{
+	mylog(level, msg);
+}
+
 Dnl::Dnl()
 {
 	db_env_ = new KV::BEnv("state"); // TODO
 	db_env_->set_errcall(mylog);
-	db_env_->open(/* DB_INIT_LOCK | */ DB_INIT_MPOOL | DB_CREATE /* | DB_THREAD*/ , 0);
+	if (db_env_->open(/* DB_INIT_LOCK | */ DB_INIT_MPOOL | DB_CREATE /* | DB_THREAD*/ , 0) != 0)
+	{
+		mylog(LOG_ERR, "cannot open/create state directory");
+	}
 	ids_ = new Ids(this);
 	urls_ = new Urls(this);
 	downloaded_ = new Downloaded(this);
 	queue_ = new Queue(this);
+
+	event_set_log_callback(libevent_log);
 
 	base_ = event_base_new();
 	dns_  = evdns_base_new(base_, 1);
@@ -98,9 +108,9 @@ Dnl::Dnl()
 	opt_.rejected_ctype    = c.get("dnl", "rejected_ctype", "");
 	opt_.user_agent        = c.get("dnl", "user_agent", "Johnnie Walker 1.0");
 
-	opt_.use_nofollow      = c.geti("dnl", "use_nofollow");
-	opt_.save_make_dirs    = c.geti("dnl", "save_make_dirs");
-	opt_.save_repl_slash   = c.geti("dnl", "save_repl_slash");
+	opt_.use_nofollow      = c.get("dnl", "use_nofollow", 1);
+	opt_.save_make_dirs    = c.get("dnl", "save_make_dirs", 0);
+	opt_.save_repl_slash   = c.get("dnl", "save_repl_slash", 1);
 }
 
 Dnl::~Dnl()
