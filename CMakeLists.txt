@@ -7,7 +7,7 @@ if (EXISTS "${CMAKE_BINARY_DIR}/settings.cmake")
 	include(${CMAKE_BINARY_DIR}/settings.cmake)
 endif()
 
-find_package(Boost COMPONENTS regex filesystem REQUIRED)
+find_package(Boost COMPONENTS regex filesystem system REQUIRED)
 find_package(Event2 REQUIRED)
 find_package(Berkeley REQUIRED)
 
