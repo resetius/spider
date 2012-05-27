@@ -523,6 +523,9 @@ bool Dnl::enqueue_single()
 		query += evhttp_uri_get_query(uri);
 	}
 
+	if (query.empty()) {
+		query = "/";
+	}
 	evhttp_make_request(con, req, EVHTTP_REQ_GET, query.c_str());
 
 	downloads_from_host_[addr] ++;
