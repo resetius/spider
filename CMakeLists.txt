@@ -21,8 +21,7 @@ link_directories(${Boost_LIBRARY_DIRS})
 set(source 
 	dnl.cpp dnl.h 
 	links_extractor.h links_extractor.cpp
-    links_db.h links_db.cpp
-	db/db.cpp db/db.h
+	links_db.h links_db.cpp
 	utils/config.cpp utils/config.h
 	utils/timer.cpp utils/timer.h
 	utils/logger.c utils/logger.h

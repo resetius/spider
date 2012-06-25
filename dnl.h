@@ -39,7 +39,6 @@
 
 #include "utils/timer.h"
 #include "links_extractor.h"
-#include "db/db.h"
 #include "links_db.h"
 
 class Urls;
@@ -121,46 +120,6 @@ public:
 	void add(const std::string & );
 	void run();
 	void stop();
-};
-
-/* id->url */
-class Ids
-{
-	KV::Db * id2url_;
-	friend class Urls;
-
-	void url(uint64_t, const std::string & u);
-
-public:
-	Ids(Dnl *);
-	~Ids();
-
-	std::string url(uint64_t);
-};
-
-/* downloaded urls */
-class Downloaded
-{
-	KV::Db * downloaded_;
-
-public:
-	Downloaded(Dnl *);
-	~Downloaded();
-
-	bool check(uint64_t id);
-	void done(uint64_t id);
-};
-
-class Queue
-{
-	KV::BDb * queue_;
-
-public:
-	Queue(Dnl *);
-	~Queue();
-
-	void push(uint64_t id);
-	uint64_t pop();
 };
 
 #endif /*DNL_QUEUE_H*/

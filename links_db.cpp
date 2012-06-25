@@ -1,16 +1,9 @@
 #include <db_cxx.h>
 
+#include <boost/filesystem.hpp>
+
 #include "links_db.h"
 #include "utils/logger.h"
-
-#if 0
-	db_env_ = new KV::BEnv("state"); // TODO
-	db_env_->set_errcall(mylog);
-	if (db_env_->open(DB_INIT_MPOOL | DB_CREATE, 0) != 0)
-	{
-		mylog(LOG_ERR, "cannot open/create state directory");
-	}
-#endif
 
 static void db_error(const DbEnv * env, const char * p, const char * m)
 {
@@ -21,6 +14,7 @@ LinksDb::LinksDb(const std::string & path)
 {
 	env_ = new DbEnv(0);
 	env_->set_errcall(db_error);
+	boost::filesystem::create_directories(path);
 	if (env_->open(path.c_str(), DB_INIT_MPOOL | DB_CREATE, 0) != 0)
 	{
 		mylog(LOG_ERR, "cannot open/create state directory");
@@ -31,6 +25,8 @@ LinksDb::LinksDb(const std::string & path)
 	downloaded_ = new Store<uint64_t, uint8_t>(env_);
 	urls_       = new Store<std::string, uint64_t>(env_);
 	ids_        = new Store<uint64_t, std::string>(env_);
+
+	queue_->set_re_len(8);
 
 	if (queue_->open(0, "queue", 0, DB_QUEUE, DB_CREATE, 0) != 0) {
 		mylog(LOG_ERR, "cannot open/create database");
@@ -71,23 +67,46 @@ LinksDb::~LinksDb()
 
 void LinksDb::push_link(uint64_t id)
 {
+	uint32_t fake = 1;
+
+	if (queue_->put(fake, id) != 0) {
+		mylog(LOG_ERR, "cannot push %d", id);
+	}
 }
 
 uint64_t LinksDb::pop_link()
 {
+	uint64_t ret = -1;
+	
+	Store<uint32_t, uint64_t>::iterator it = queue_->begin();
+	uint32_t fake;
+	if (!it->next(fake, ret)) {
+		//empty
+		return ret;
+	}
+	it->del(); // delete value and return
+	//TODO: can loose id here
+	return ret;
 }
 
 bool LinksDb::is_downloaded(uint64_t id)
 {
+	return downloaded_->exists(id) == 0;
 }
 
 void LinksDb::mark_downloaded(uint64_t id)
 {
+	if (downloaded_->put(id, 1) != 0) {
+		mylog(LOG_ERR, "cannot commit url");
+	}
 }
 
 // id -> string
 std::string LinksDb::url(uint64_t id)
 {
+	std::string ret;
+	ids_->get(id, ret);
+	return ret;
 }
 
 // string -> url
