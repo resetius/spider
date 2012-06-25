@@ -33,3 +33,7 @@ target_link_libraries(spider dnl ${Berkeley_LIBRARY} ${Event2_LIBRARY} ${Boost_L
 add_executable(test_links_extractor test_links_extractor.cpp)
 target_link_libraries(test_links_extractor dnl ${Berkeley_LIBRARY} ${Event2_LIBRARY} ${Boost_LIBRARIES})
 
+add_executable(test_links_db test_links_db.cpp)
+target_link_libraries(test_links_db dnl ${Berkeley_LIBRARY} ${Event2_LIBRARY} ${Boost_LIBRARIES})
+
+

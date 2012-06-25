@@ -87,11 +87,13 @@ LinksDb::~LinksDb()
 {
 	queue_->close(0);
 	downloaded_->close(0);
+	downloading_->close(0);
 	urls_->close(0);
 	ids_->close(0);
 
 	delete queue_;
 	delete downloaded_;
+	delete downloading_;
 	delete urls_;
 	delete ids_;
 
