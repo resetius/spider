@@ -129,6 +129,8 @@ Dnl::~Dnl()
 void Dnl::add(const std::string & url)
 {
 //	fprintf(stderr, "add url '%s'\n", url.c_str());
+	mylog(6, "add url '%s'", url.c_str());
+
 	uint64_t id = urls_->id(url);
 	queue_->push(id);
 }

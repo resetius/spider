@@ -80,7 +80,7 @@ class Dnl
 
 	uint64_t fake_; // TODO: remove me
 
-	std::unordered_set < uint64_t > downloading_ids_;
+	std::unordered_set < uint64_t > downloading_ids_; //TODO: store in db
 	std::unordered_map < std::string, int > downloads_from_host_;
 
 	struct Options {
