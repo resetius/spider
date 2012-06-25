@@ -539,6 +539,7 @@ void Dnl::enqueue()
 
 void Dnl::run()
 {
+	ldb_.restore_downloading();
 	enqueue();
 	t_.restart();
 	event_base_loop(base_, 0);
