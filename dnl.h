@@ -62,11 +62,7 @@ struct Download
 
 class Dnl
 {
-	Urls * urls_;
-	Ids * ids_;
-	Downloaded * downloaded_;
-	Queue * queue_;
-	KV::Env * db_env_;
+	LinksDb ldb_;
 	LinksExtractor le_;
 
 	struct event_base * base_;
