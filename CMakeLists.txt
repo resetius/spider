@@ -1,6 +1,14 @@
 cmake_minimum_required(VERSION 2.8)
 project(dnl)
 
+
+enable_testing()
+
+IF(BUILD_TESTING)
+	SET(BUILDNAME "${BUILDNAME}" CACHE STRING "spider")
+	MARK_AS_ADVANCED(BUILDNAME)
+ENDIF(BUILD_TESTING)
+
 set (CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 
 if (EXISTS "${CMAKE_BINARY_DIR}/settings.cmake")
@@ -35,5 +43,11 @@ target_link_libraries(test_links_extractor dnl ${Berkeley_LIBRARY} ${Event2_LIBR
 
 add_executable(test_links_db test_links_db.cpp)
 target_link_libraries(test_links_db dnl ${Berkeley_LIBRARY} ${Event2_LIBRARY} ${Boost_LIBRARIES})
+
+
+add_test(links_db_queue ${CMAKE_BINARY_DIRECTORY}/test_links_db queue)
+add_test(links_db_flags ${CMAKE_BINARY_DIRECTORY}/test_links_db flags)
+add_test(links_db_converters ${CMAKE_BINARY_DIRECTORY}/test_links_db converters)
+add_test(links_db_restore ${CMAKE_BINARY_DIRECTORY}/test_links_db restore)
 
 
