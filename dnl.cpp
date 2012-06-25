@@ -235,7 +235,6 @@ void Dnl::process(struct evhttp_request * req, Download * d)
 			evbuffer_remove(req->input_buffer, &content[0], size);
 		}
 		ldb_.mark_downloaded(d->id);
-		downloading_ids_.erase(d->id);
 
 		if (!content.empty()) {
 			extract_links(req, content, d);
@@ -258,7 +257,6 @@ void Dnl::process(struct evhttp_request * req, Download * d)
 			add(location);
 		}
 	}
-	downloading_ids_.erase(d->id);
 
 	const char * addr = evhttp_uri_get_host(d->uri);
 	downloads_from_host_[addr]--;
@@ -419,7 +417,7 @@ bool Dnl::enqueue_single()
 		mylog(LOG_NOTICE, "empty queue");
 		return false;
 	}
-	if (downloading_ids_.find(id) != downloading_ids_.end()) {
+	if (ldb_.is_downloading(id)) {
 		mylog(LOG_DEBUG, "url %lu already downloading", id);
 		return true;
 	}
@@ -480,7 +478,7 @@ bool Dnl::enqueue_single()
 		exit(-1);
 	}
 
-	downloading_ids_.insert(id);
+	ldb_.mark_downloading(id);
 
 	struct evhttp_request * req = evhttp_request_new(cb, rq);
 	if (!req) {

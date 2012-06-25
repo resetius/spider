@@ -185,6 +185,12 @@ public:
 		return Db::exists(0, &key, flags);
 	}
 
+	int del(const K & k, uint32_t flags = 0)
+	{
+		Dbt key = kt_.dbt4get(k);
+		return Db::del(0, &key, flags);
+	}
+
 	boost::shared_ptr <Iterator> begin()
 	{
 		boost::shared_ptr <Iterator> it(new Iterator(this));

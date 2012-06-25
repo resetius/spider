@@ -21,10 +21,11 @@ LinksDb::LinksDb(const std::string & path)
 		exit(1);
 	}
 
-	queue_      = new Store<uint32_t, uint64_t>(env_);
-	downloaded_ = new Store<uint64_t, uint8_t>(env_);
-	urls_       = new Store<std::string, uint64_t>(env_);
-	ids_        = new Store<uint64_t, std::string>(env_);
+	queue_       = new Store<uint32_t, uint64_t>(env_);
+	downloaded_  = new Store<uint64_t, uint8_t>(env_);
+	downloading_ = new Store<uint64_t, uint8_t>(env_);
+	urls_        = new Store<std::string, uint64_t>(env_);
+	ids_         = new Store<uint64_t, std::string>(env_);
 
 	queue_->set_re_len(8);
 
@@ -33,6 +34,10 @@ LinksDb::LinksDb(const std::string & path)
 		exit(1);		
 	}
 	if (downloaded_->open(0, "downloaded", 0, DB_HASH, DB_CREATE, 0) != 0) {
+		mylog(LOG_ERR, "cannot open/create database");
+		exit(1);		
+	}
+	if (downloading_->open(0, "downloading", 0, DB_HASH, DB_CREATE, 0) != 0) {
 		mylog(LOG_ERR, "cannot open/create database");
 		exit(1);		
 	}
@@ -94,9 +99,22 @@ bool LinksDb::is_downloaded(uint64_t id)
 	return downloaded_->exists(id) == 0;
 }
 
+bool LinksDb::is_downloading(uint64_t id)
+{
+	return downloading_->exists(id) == 0;
+}
+
 void LinksDb::mark_downloaded(uint64_t id)
 {
 	if (downloaded_->put(id, 1) != 0) {
+		mylog(LOG_ERR, "cannot commit url");
+	}
+	downloading_->del(id);
+}
+
+void LinksDb::mark_downloading(uint64_t id)
+{
+	if (downloading_->put(id, 1) != 0) {
 		mylog(LOG_ERR, "cannot commit url");
 	}
 }

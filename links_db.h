@@ -12,6 +12,7 @@ class LinksDb
 	DbEnv * env_;
 	Store<uint32_t, uint64_t> * queue_;
 	Store<uint64_t, uint8_t> * downloaded_;
+	Store<uint64_t, uint8_t> * downloading_;
 	Store<std::string, uint64_t> * urls_;
 	Store<uint64_t, std::string> * ids_;
 
@@ -26,6 +27,9 @@ public:
 
 	bool is_downloaded(uint64_t id);
 	void mark_downloaded(uint64_t id);
+
+	bool is_downloading(uint64_t id);
+	void mark_downloading(uint64_t id);
 
 	// id -> string
 	std::string url(uint64_t id);
