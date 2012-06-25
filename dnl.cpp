@@ -1,7 +1,7 @@
 /* -*- charset: utf-8 -*- */
 /*$Id$*/
 
-/* Copyright (c) 2011 Alexey Ozeritsky
+/* Copyright (c) 2011, 2012 Alexey Ozeritsky
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -72,7 +72,7 @@ Dnl::Dnl()
 {
 	db_env_ = new KV::BEnv("state"); // TODO
 	db_env_->set_errcall(mylog);
-	if (db_env_->open(/* DB_INIT_LOCK | */ DB_INIT_MPOOL | DB_CREATE /* | DB_THREAD*/ , 0) != 0)
+	if (db_env_->open(DB_INIT_MPOOL | DB_CREATE, 0) != 0)
 	{
 		mylog(LOG_ERR, "cannot open/create state directory");
 	}
