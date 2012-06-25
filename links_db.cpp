@@ -69,7 +69,7 @@ void LinksDb::push_link(uint64_t id)
 {
 	uint32_t fake = 1;
 
-	if (queue_->put(fake, id) != 0) {
+	if (queue_->put(fake, id, DB_APPEND) != 0) {
 		mylog(LOG_ERR, "cannot push %d", id);
 	}
 }
