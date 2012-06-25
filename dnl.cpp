@@ -68,19 +68,8 @@ static void libevent_log(int level, const char * msg)
 	mylog(level, msg);
 }
 
-Dnl::Dnl()
+Dnl::Dnl(): ldb_("state")
 {
-	db_env_ = new KV::BEnv("state"); // TODO
-	db_env_->set_errcall(mylog);
-	if (db_env_->open(DB_INIT_MPOOL | DB_CREATE, 0) != 0)
-	{
-		mylog(LOG_ERR, "cannot open/create state directory");
-	}
-	ids_ = new Ids(this);
-	urls_ = new Urls(this);
-	downloaded_ = new Downloaded(this);
-	queue_ = new Queue(this);
-
 	event_set_log_callback(libevent_log);
 
 	base_ = event_base_new();
@@ -115,12 +104,6 @@ Dnl::Dnl()
 
 Dnl::~Dnl()
 {
-	delete ids_;
-	delete urls_;
-	delete downloaded_;
-	delete queue_;
-	delete db_env_;
-
 	evhttp_free(http_);
 	evdns_base_free(dns_, 0);
 	event_base_free(base_);
@@ -131,8 +114,8 @@ void Dnl::add(const std::string & url)
 //	fprintf(stderr, "add url '%s'\n", url.c_str());
 	mylog(6, "add url '%s'", url.c_str());
 
-	uint64_t id = urls_->id(url);
-	queue_->push(id);
+	uint64_t id = ldb_.id(url);
+	ldb_.push_link(id);
 }
 
 void Dnl::save_content(const std::string & content, const std::string & url)
@@ -251,7 +234,7 @@ void Dnl::process(struct evhttp_request * req, Download * d)
 			content.resize(size);
 			evbuffer_remove(req->input_buffer, &content[0], size);
 		}
-		downloaded_->done(d->id);
+		ldb_.mark_downloaded(d->id);
 		downloading_ids_.erase(d->id);
 
 		if (!content.empty()) {
@@ -268,7 +251,7 @@ void Dnl::process(struct evhttp_request * req, Download * d)
 		const char * location = evhttp_find_header(req->input_headers, "Location");
 		//fprintf(stderr, "location: '%s'\n", location);
 
-		downloaded_->done(d->id);
+		ldb_.mark_downloaded(d->id);
 		urls_downloaded_ += 1;
 
 		if (location) {
@@ -347,7 +330,7 @@ bool Dnl::fname_from_url(std::string & path, std::string & file, const std::stri
 
 bool Dnl::check_dnl_url(const std::string & url, uint64_t id)
 {
-	if (downloaded_->check(id)) {
+	if (ldb_.is_downloaded(id)) {
 		mylog(LOG_NOTICE, "url '%s' already downloaded", url.c_str());
 		return false;
 	}
@@ -431,7 +414,7 @@ bool Dnl::check_content_type(const std::string & ctype)
 
 bool Dnl::enqueue_single()
 {
-	uint64_t id = queue_->pop();
+	uint64_t id = ldb_.pop_link();
 	if (id == (uint64_t)(-1)) {
 		mylog(LOG_NOTICE, "empty queue");
 		return false;
@@ -440,7 +423,7 @@ bool Dnl::enqueue_single()
 		mylog(LOG_DEBUG, "url %lu already downloading", id);
 		return true;
 	}
-	std::string url = ids_->url(id);
+	std::string url = ldb_.url(id);
 	if (url.empty()) {
 		mylog(LOG_DEBUG, "empty url");
 		return true;
@@ -469,7 +452,7 @@ bool Dnl::enqueue_single()
 	if (downloads_from_host_.find(addr) != downloads_from_host_.end()) {
 		if (downloads_from_host_[addr] > opt_.max_downloads_per_host) {
 			mylog(LOG_DEBUG, " host '%s' limit reached ", addr);
-			queue_->push(id);
+			ldb_.push_link(id);
 			evhttp_uri_free(uri);
 			// TODO: not optimal
 			//
@@ -565,8 +548,10 @@ void Dnl::run()
 
 Ids::Ids(Dnl * dnl)
 {
+#if 0
 	id2url_ = new KV::BDb(*dnl->db_env(), "ids", KV::BDb::HASH);
 	id2url_->open(KV::BDb::READ|KV::Db::WRITE|KV::BDb::CREATE);
+#endif
 }
 
 Ids::~Ids()
@@ -588,43 +573,14 @@ void Ids::url(uint64_t id, const std::string & u)
 	}
 }
 
-Urls::Urls(Dnl * dnl): ids_(dnl->ids())
-{
-	url2id_ = new KV::BDb(*dnl->db_env(), "urls", KV::BDb::HASH);
-	url2id_->open(KV::BDb::READ|KV::BDb::WRITE|KV::BDb::CREATE);
-	max_id_ = 0;
-	url2id_->get(0, "", max_id_);
-}
-
-Urls::~Urls()
-{
-	delete url2id_;
-}
-
-uint64_t Urls::id(const std::string & url)
-{
-	uint64_t ret = 0;
-	if (url2id_->get(0, url, ret) == 0) {
-		return ret;
-	} else {
-		ret = max_id_++;
-		if (url2id_->put(0, url, ret) != 0) {
-			mylog(LOG_ERR, "cannot put '%s'", url.c_str());
-		}
-		if (url2id_->put(0, "", max_id_) != 0) {
-			mylog(LOG_ERR, "cannot put special key");
-		}
-		ids_->url(ret, url);
-	}
-	return ret;
-}
-
 Downloaded::Downloaded(Dnl * dnl)
 {
+#if 0
 	downloaded_ = new KV::BDb(*dnl->db_env(), "downloaded", KV::BDb::BTREE);
 	if (downloaded_->open(KV::BDb::READ|KV::BDb::WRITE|KV::BDb::CREATE) != 0) {
 		mylog(LOG_ERR, "cannot open downloaded");
 	}
+#endif
 }
 
 Downloaded::~Downloaded()
@@ -651,11 +607,13 @@ void Downloaded::done(uint64_t id)
 
 Queue::Queue(Dnl * dnl)
 {
+#if 0
 	queue_ = new KV::BDb(*dnl->db_env(), "queue", KV::BDb::QUEUE);
 	queue_->set_re_len(8);
 	if (queue_->open(KV::BDb::READ|KV::BDb::WRITE|KV::BDb::CREATE) != 0) {
 		mylog(LOG_ERR, "cannot open queue!");
 	}
+#endif
 }
 
 Queue::~Queue()

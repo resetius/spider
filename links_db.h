@@ -5,13 +5,26 @@
 
 #include <string>
 
+#include "store.h"
+
 class LinksDb
 {
+	DbEnv * env_;
+	Store<uint32_t, uint64_t> * queue_;
+	Store<uint64_t, uint8_t> * downloaded_;
+	Store<std::string, uint64_t> * urls_;
+	Store<uint64_t, std::string> * ids_;
+
+	uint64_t max_id_;
+
 public:
+	LinksDb(const std::string & path);
+	~LinksDb();
+	
 	void push_link(uint64_t id);
 	uint64_t pop_link();
 
-	void is_downloaded(uint64_t id);
+	bool is_downloaded(uint64_t id);
 	void mark_downloaded(uint64_t id);
 
 	// id -> string

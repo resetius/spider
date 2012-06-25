@@ -40,6 +40,7 @@
 #include "utils/timer.h"
 #include "links_extractor.h"
 #include "db/db.h"
+#include "links_db.h"
 
 class Urls;
 class Ids;
@@ -117,43 +118,9 @@ public:
 
 	void process(struct evhttp_request * req, Download * d);
 
-	KV::BEnv * db_env() {
-		return static_cast < KV::BEnv * > (db_env_);
-	}
-
-	Urls * urls() {
-		return urls_;
-	}
-
-	Ids * ids() {
-		return ids_;
-	}
-
-	Downloaded * downloaded() {
-		return downloaded_;
-	}
-
-	Queue * queue() {
-		return queue_;
-	}
-
 	void add(const std::string & );
 	void run();
 	void stop();
-};
-
-/* url->id */
-class Urls
-{
-	KV::Db * url2id_;
-	uint64_t max_id_;
-	Ids * ids_;
-
-public:
-	Urls(Dnl *);
-	~Urls();
-
-	uint64_t id(const std::string & url);
 };
 
 /* id->url */
